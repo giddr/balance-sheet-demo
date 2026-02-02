@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balance Sheet - Expense Tracker (Demo)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-primary">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-wallet2"></i> Balance Sheet
+            </span>
+        </div>
+    </nav>
+
+    <!-- Demo Banner -->
+    <div class="demo-banner">
+        <i class="bi bi-info-circle me-1"></i>
+        <strong>Demo Mode</strong> &mdash; Showing sample data. All transactions and figures are fictional.
+    </div>
+
+    <div class="container mt-4">
+        <!-- Year Toggle for Stats -->
+        <div class="d-flex justify-content-end mb-3">
+            <div class="btn-group btn-group-sm" role="group" id="stats-year-toggle">
+                <button type="button" class="btn btn-primary active" data-year="2025" onclick="setStatsYear(2025)">2025</button>
+                <button type="button" class="btn btn-outline-primary" data-year="2026" onclick="setStatsYear(2026)">2026</button>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4 g-3" id="stats-cards">
+            <div class="col-md-4">
+                <div class="card text-center clickable-card" style="border-left: 4px solid #10b981; cursor: pointer;" onclick="filterByTransactionType('income')">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="mb-0 text-muted">&#x1F4B0; INCOME</h6>
+                                <small class="text-muted"><em>(<span class="current-year"></span>)</em></small>
+                            </div>
+                            <div class="text-end">
+                                <h3 class="mb-0" id="total-income" style="color: #10b981; font-weight: 600;">$0.00</h3>
+                                <small class="text-muted" id="month-income-text">Month: $0</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center clickable-card" style="border-left: 4px solid #ef4444; cursor: pointer;" onclick="filterByTransactionType('expense')">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="mb-0 text-muted">&#x1F4B8; EXPENSES</h6>
+                                <small class="text-muted"><em>(<span class="current-year"></span>)</em></small>
+                            </div>
+                            <div class="text-end">
+                                <h3 class="mb-0" id="total-expenses" style="color: #ef4444; font-weight: 600;">$0.00</h3>
+                                <small class="text-muted" id="month-expenses-text">Month: $0</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center" style="border-left: 4px solid #3b82f6;">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="mb-0 text-muted">&#x1F4CA; NET</h6>
+                                <small class="text-muted"><em>(<span class="current-year"></span>)</em></small>
+                            </div>
+                            <div class="text-end">
+                                <h3 class="mb-0" id="net-position" style="color: #3b82f6; font-weight: 600;">$0.00</h3>
+                                <small class="text-muted" id="month-net-text">Month: $0</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-4 g-3">
+            <div class="col-md-6">
+                <div class="card text-center" style="border-left: 4px solid #10b981;">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="mb-0 text-muted">&#x2713; ESSENTIAL</h6>
+                                <small class="text-muted"><em>(<span class="current-year"></span>)</em></small>
+                            </div>
+                            <h3 class="mb-0" id="essential-expenses" style="color: #10b981; font-weight: 600;">$0.00</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card text-center" style="border-left: 4px solid #8b5cf6;">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="mb-0 text-muted">&#x25C6; OPTIONAL</h6>
+                                <small class="text-muted"><em>(<span class="current-year"></span>)</em></small>
+                            </div>
+                            <h3 class="mb-0" id="optional-expenses" style="color: #8b5cf6; font-weight: 600;">$0.00</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cash Position & Runway Card -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card" style="border-left: 4px solid #f59e0b;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0" style="color: #f59e0b;">&#x1F4B5; Cash Position & Runway</h5>
+                            <button class="btn btn-primary btn-sm" onclick="showAddCashPositionModal()">
+                                <i class="bi bi-plus-circle"></i> Update Cash
+                            </button>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <small class="text-muted d-block">CURRENT CASH</small>
+                                    <h4 class="mb-0" id="current-cash" style="color: #f59e0b;">$0.00</h4>
+                                    <small class="text-muted" id="cash-date">No data</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <small class="text-muted d-block">RUNWAY</small>
+                                    <h4 class="mb-0" id="runway-months" style="color: #10b981;">-- months</h4>
+                                    <small class="text-muted" id="runway-date">--</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <small class="text-muted d-block">MONTHLY BURN</small>
+                                    <h4 class="mb-0" id="monthly-burn" style="color: #ef4444;">$0.00</h4>
+                                    <small class="text-muted">Avg last 3 months</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <small class="text-muted d-block">QUICK ACTIONS</small>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="showCashHistoryModal()">
+                                        <i class="bi bi-clock-history"></i> History
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selection Tally Bar (fixed at bottom) -->
+        <div id="selection-tally-bar" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--bg-card); border: 2px solid var(--primary); border-radius: 12px; padding: 1rem 2rem; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6); z-index: 1000; min-width: 400px;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span id="selection-count" class="badge bg-primary me-2">0</span>
+                    <span style="color: var(--text-primary);">transactions selected</span>
+                </div>
+                <div class="ms-4">
+                    <strong style="color: var(--text-primary);">Total: </strong>
+                    <strong id="selection-total" style="color: var(--primary); font-size: 1.2rem;">$0.00</strong>
+                </div>
+                <button class="btn btn-sm btn-outline-primary ms-3" onclick="clearSelection()">
+                    <i class="bi bi-x-circle"></i> Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <ul class="nav nav-tabs mb-4" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#expenses-tab">
+                    <i class="bi bi-list-ul"></i> Transactions
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#reports-tab">
+                    <i class="bi bi-bar-chart"></i> Reports
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#import-tab">
+                    <i class="bi bi-upload"></i> Import
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#export-tab">
+                    <i class="bi bi-file-earmark-pdf"></i> Export
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#settings-tab">
+                    <i class="bi bi-gear"></i> Settings
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Expenses Tab -->
+            <div class="tab-pane fade show active" id="expenses-tab">
+                <!-- Search and Filter Bar -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-3">
+                                <label class="form-label small text-muted mb-1">Search</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="text" class="form-control" id="search-expenses" placeholder="Search...">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small text-muted mb-1">Year</label>
+                                <select class="form-select form-select-sm" id="filter-year">
+                                    <option value="">All Years</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small text-muted mb-1">Transaction</label>
+                                <select class="form-select form-select-sm" id="filter-transaction-type">
+                                    <option value="">All</option>
+                                    <option value="income">&#x1F4B0; Income</option>
+                                    <option value="expense">&#x1F4B8; Expense</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small text-muted mb-1">Category</label>
+                                <select class="form-select form-select-sm" id="filter-category">
+                                    <option value="">All</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small text-muted mb-1">Type</label>
+                                <select class="form-select form-select-sm" id="filter-type">
+                                    <option value="">All</option>
+                                    <option value="essential">&#x2713; Essential</option>
+                                    <option value="optional">&#x25C6; Optional</option>
+                                </select>
+                            </div>
+                            <div class="col-md-1">
+                                <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters()">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Tabs -->
+                <div class="card">
+                    <div class="card-header">
+                        <ul class="nav nav-pills month-pills card-header-pills d-flex" id="monthly-tabs" role="tablist">
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content" id="monthly-tab-content">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Expense FAB -->
+                <button type="button" class="btn btn-primary btn-lg position-fixed bottom-0 end-0 m-4 rounded-circle"
+                        data-bs-toggle="modal" data-bs-target="#addExpenseModal" style="width: 60px; height: 60px; z-index: 1000;">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+
+                <!-- Add Expense Modal -->
+                <div class="modal fade" id="addExpenseModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Add Transaction</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="expense-form">
+                                    <div class="mb-3">
+                                        <label class="form-label">Type</label>
+                                        <div class="btn-group w-100" role="group">
+                                            <input type="radio" class="btn-check" name="transaction-type" id="type-expense" value="expense" checked>
+                                            <label class="btn btn-outline-danger" for="type-expense">&#x1F4B8; Expense</label>
+                                            <input type="radio" class="btn-check" name="transaction-type" id="type-income" value="income">
+                                            <label class="btn btn-outline-success" for="type-income">&#x1F4B0; Income</label>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Description</label>
+                                        <input type="text" class="form-control" id="description" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Amount</label>
+                                        <input type="number" class="form-control" id="amount" step="0.01" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Date</label>
+                                        <input type="date" class="form-control" id="date" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Category</label>
+                                        <select class="form-select" id="category">
+                                            <option value="">Select Category</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Tags (comma separated)</label>
+                                        <input type="text" class="form-control" id="tags" placeholder="e.g., groceries, weekly">
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="is-recurring">
+                                        <label class="form-check-label" for="is-recurring">Recurring Expense</label>
+                                    </div>
+                                    <div class="mb-3" id="recurring-options" style="display: none;">
+                                        <label class="form-label">Frequency</label>
+                                        <select class="form-select" id="recurring-frequency">
+                                            <option value="daily">Daily</option>
+                                            <option value="weekly">Weekly</option>
+                                            <option value="monthly">Monthly</option>
+                                            <option value="yearly">Yearly</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Notes</label>
+                                        <textarea class="form-control" id="notes" rows="2"></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="bi bi-plus-circle"></i> Add Expense
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Tab -->
+            <div class="tab-pane fade" id="reports-tab">
+                <div class="row mb-3 align-items-end">
+                    <div class="col-md-8">
+                        <div class="btn-group period-selector flex-wrap" role="group">
+                            <button type="button" class="btn btn-outline-primary active" id="period-month" onclick="selectPeriod('month')">This Month</button>
+                            <button type="button" class="btn btn-outline-primary" id="period-last3months" onclick="selectPeriod('last3months')">Last 3 Months</button>
+                            <button type="button" class="btn btn-outline-primary" id="period-year" onclick="selectPeriod('year')">Year to Date</button>
+                            <button type="button" class="btn btn-outline-primary" id="period-last12months" onclick="selectPeriod('last12months')">Last 12 Months</button>
+                            <button type="button" class="btn btn-outline-primary" id="period-all" onclick="selectPeriod('all')">All Time</button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted mb-1">Or select specific month:</label>
+                        <select class="form-select" id="month-selector" onchange="selectSpecificMonth()">
+                            <option value="">Select a month...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Expenses by Category</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="category-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Monthly Trend</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="trend-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category Breakdown Section -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Category Breakdown</h5>
+                                <small class="text-muted">Click a category to see transactions</small>
+                            </div>
+                            <div class="card-body p-0">
+                                <div id="category-breakdown-list">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Analytics Section -->
+                <div class="row mt-4" id="advanced-analytics">
+                </div>
+            </div>
+
+            <!-- Import Tab -->
+            <div class="tab-pane fade" id="import-tab">
+                <div class="row">
+                    <div class="col-md-8 offset-md-2">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Import Bank/Credit Card Statements</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <strong>CSV Formats Supported:</strong>
+                                    <br>
+                                    &bull; <strong>Format 1 (Amex):</strong> <code>date</code>, <code>description</code>, <code>amount</code>
+                                    <br>
+                                    &bull; <strong>Format 2 (Bank):</strong> <code>date</code>, <code>description</code>, <code>debits and credits</code>, <code>balance</code>
+                                    <br>
+                                    &nbsp;&nbsp;<small class="text-muted">Debits in parentheses (123.45), credits without 123.45</small>
+                                    <br><br>
+                                    <strong>Supported date formats:</strong> YYYY-MM-DD, MM/DD/YYYY, DD/MM/YYYY
+                                    <br><br>
+                                    <strong>&#x1F4A1; Tip:</strong> You can select multiple CSV files at once!
+                                </div>
+                                <form id="import-form">
+                                    <div class="mb-3">
+                                        <label class="form-label">Select CSV Files (one or more)</label>
+                                        <input type="file" class="form-control" id="csv-file" accept=".csv" multiple required>
+                                        <small class="form-text text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple files</small>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-upload"></i> Import Transactions
+                                    </button>
+                                </form>
+                                <div id="import-result" class="mt-3"></div>
+                            </div>
+                        </div>
+
+                        <!-- Manual Transaction Entry -->
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5><i class="bi bi-plus-circle me-2"></i>Add Manual Transaction</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="manual-transaction-form">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Date</label>
+                                            <input type="date" class="form-control" id="manual-date" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Amount</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" class="form-control" id="manual-amount" step="0.01" min="0" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Description</label>
+                                        <input type="text" class="form-control" id="manual-description" placeholder="e.g., Mortgage Payment" required>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Category</label>
+                                            <select class="form-select" id="manual-category" required>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Type</label>
+                                            <select class="form-select" id="manual-type">
+                                                <option value="expense">Expense</option>
+                                                <option value="income">Income</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Source Account (Optional)</label>
+                                            <input type="text" class="form-control" id="manual-source" placeholder="e.g., ANZ Everyday, Amex">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="form-check mt-4">
+                                                <input class="form-check-input" type="checkbox" id="manual-essential">
+                                                <label class="form-check-label" for="manual-essential">
+                                                    Essential expense
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-plus-lg"></i> Add Transaction
+                                    </button>
+                                </form>
+                                <div id="manual-result" class="mt-3"></div>
+                            </div>
+                        </div>
+
+                        <div class="card mt-4">
+                            <div class="card-header bg-danger text-white">
+                                <h5><i class="bi bi-exclamation-triangle"></i> Danger Zone</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted">Delete all expenses from the database. This action cannot be undone!</p>
+                                <button type="button" class="btn btn-danger" onclick="confirmDeleteAll()">
+                                    <i class="bi bi-trash"></i> Delete All Expenses
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5>Sample CSV Format</h5>
+                            </div>
+                            <div class="card-body">
+                                <pre class="bg-light p-3">date,description,amount,category
+2024-01-15,Grocery Store,45.32,Food &amp; Dining
+2024-01-16,Gas Station,52.00,Transportation
+2024-01-17,Netflix Subscription,15.99,Entertainment</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Tab -->
+            <div class="tab-pane fade" id="export-tab">
+                <div class="row">
+                    <div class="col-md-8 offset-md-2">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="bi bi-file-earmark-pdf me-2"></i>Export PDF Report</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Period Selection -->
+                                <div class="mb-4">
+                                    <label class="form-label">Report Period</label>
+                                    <div class="btn-group w-100" role="group" id="export-period-buttons">
+                                        <button type="button" class="btn btn-outline-primary" onclick="setExportPeriod('month', this)">This Month</button>
+                                        <button type="button" class="btn btn-outline-primary" onclick="setExportPeriod('last3months', this)">Last 3 Months</button>
+                                        <button type="button" class="btn btn-outline-primary active" onclick="setExportPeriod('year', this)">Year to Date</button>
+                                        <button type="button" class="btn btn-outline-primary" onclick="setExportPeriod('all', this)">All Time</button>
+                                    </div>
+                                    <div class="mt-2">
+                                        <select class="form-select" id="export-month-selector" onchange="setExportCustomMonth()">
+                                            <option value="">Or select specific month...</option>
+                                        </select>
+                                    </div>
+                                    <div class="mt-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="export-custom-range" onchange="toggleCustomDateRange()">
+                                            <label class="form-check-label" for="export-custom-range">Custom date range</label>
+                                        </div>
+                                        <div id="custom-date-range-inputs" class="mt-2 gap-2" style="display: none;">
+                                            <input type="date" class="form-control form-control-sm" id="export-start-date" onchange="updateCustomDateRange()">
+                                            <span class="mx-2">to</span>
+                                            <input type="date" class="form-control form-control-sm" id="export-end-date" onchange="updateCustomDateRange()">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Section Checkboxes -->
+                                <div class="mb-4">
+                                    <label class="form-label">Include in Report</label>
+                                    <div class="card" style="background: var(--bg-main);">
+                                        <div class="card-body">
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" id="export-summary" checked>
+                                                <label class="form-check-label" for="export-summary">
+                                                    <strong>Summary Metrics</strong>
+                                                    <small class="text-muted d-block">Income, Expenses, Net Position, Savings Rate</small>
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" id="export-essential" checked>
+                                                <label class="form-check-label" for="export-essential">
+                                                    <strong>Essential vs Optional</strong>
+                                                    <small class="text-muted d-block">Breakdown of essential and optional spending</small>
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" id="export-categories" checked>
+                                                <label class="form-check-label" for="export-categories">
+                                                    <strong>Category Breakdown</strong>
+                                                    <small class="text-muted d-block">Spending by category with amounts and counts</small>
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="export-trend">
+                                                <label class="form-check-label" for="export-trend">
+                                                    <strong>Monthly Trend Table</strong>
+                                                    <small class="text-muted d-block">12-month history of income, expenses, net</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Custom Title -->
+                                <div class="mb-4">
+                                    <label class="form-label">Report Title (Optional)</label>
+                                    <input type="text" class="form-control" id="export-title" placeholder="Financial Report" value="Financial Report">
+                                </div>
+
+                                <!-- Export Button -->
+                                <button class="btn btn-primary btn-lg w-100" onclick="generatePDFExport()">
+                                    <i class="bi bi-download me-2"></i>Download PDF Report
+                                </button>
+
+                                <div id="export-status" class="mt-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div class="tab-pane fade" id="settings-tab">
+                <div class="row">
+                    <div class="col-md-8 offset-md-2">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Category Management</h5>
+                                <button class="btn btn-primary btn-sm" onclick="addNewCategory()">
+                                    <i class="bi bi-plus-circle"></i> Add Category
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-3">Manage your expense categories. Click the color to change it, pencil to rename, or trash to delete.</p>
+                                <div id="category-list" class="list-group">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Duplicate Detection -->
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5><i class="bi bi-files me-2"></i>Duplicate Detection</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted">Scan your transactions for duplicates that may have been imported twice.</p>
+                                <button class="btn btn-primary" onclick="scanForDuplicates()">
+                                    <i class="bi bi-search"></i> Scan for Duplicates
+                                </button>
+                                <div id="duplicates-results" class="mt-3" style="display: none;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Service Station Recategorization -->
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5><i class="bi bi-fuel-pump me-2"></i>Smart Recategorization</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted">Automatically recategorize service station transactions based on amount:</p>
+                                <ul class="text-muted small">
+                                    <li><strong>$40+</strong> &rarr; Transportation (fuel purchases)</li>
+                                    <li><strong>Under $40</strong> &rarr; Food & Dining (convenience store)</li>
+                                </ul>
+                                <button class="btn btn-secondary" onclick="recategorizeServiceStations()">
+                                    <i class="bi bi-arrow-repeat"></i> Recategorize Service Stations
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Bulk Actions -->
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5><i class="bi bi-ui-checks me-2"></i>Bulk Actions</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted">Select transactions in the Transactions tab, then use these bulk actions:</p>
+                                <div class="btn-group">
+                                    <button class="btn btn-outline-primary" onclick="bulkEditCategory()">
+                                        <i class="bi bi-tag"></i> Change Category
+                                    </button>
+                                    <button class="btn btn-outline-secondary" onclick="bulkEditEssential()">
+                                        <i class="bi bi-check-circle"></i> Essential/Optional
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="bulkDeleteSelected()">
+                                        <i class="bi bi-trash"></i> Delete Selected
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Learned Rules -->
+                        <div class="card mt-4">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Learned Categorization Rules</h5>
+                                <button class="btn btn-outline-primary btn-sm" onclick="loadLearnedRules()">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted">When you change a transaction's category with "Apply to all", the app remembers this rule. Future imports will automatically use these rules.</p>
+                                <div id="learned-rules-list" class="mt-3">
+                                    <p class="text-muted text-center">Click Refresh to load rules</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Cash Position Modal -->
+    <div class="modal fade" id="addCashPositionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update Cash Position</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="cash-position-form">
+                        <div class="mb-3">
+                            <label class="form-label">Date</label>
+                            <input type="date" class="form-control" id="cash-date-input" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Cash Amount</label>
+                            <input type="number" class="form-control" id="cash-amount-input" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes (Optional)</label>
+                            <textarea class="form-control" id="cash-notes-input" rows="2"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Save Cash Position</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cash History Modal -->
+    <div class="modal fade" id="cashHistoryModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cash Position History</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table" id="cash-history-full-table">
+                            <thead id="cash-history-thead">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Notes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cash-history-table">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="js/demo-data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

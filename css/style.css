@@ -1,0 +1,474 @@
+/* Xero-inspired Dark Mode */
+:root {
+    --xero-dark-bg: #0d1117;
+    --xero-card-bg: #161b22;
+    --xero-card-hover: #1c2128;
+    --xero-blue: #13B5EA;
+    --xero-blue-hover: #0fa0d1;
+    --xero-border: #30363d;
+    --xero-text: #e6edf3;
+    --xero-text-muted: #8b949e;
+    --essential: #3fb950;
+    --optional: #a371f7;
+}
+
+body {
+    background-color: var(--xero-dark-bg);
+    color: var(--xero-text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.navbar {
+    background: var(--xero-card-bg) !important;
+    border-bottom: 1px solid var(--xero-border);
+}
+
+.navbar-brand {
+    color: var(--xero-text) !important;
+}
+
+.navbar-brand i {
+    color: var(--xero-blue);
+}
+
+.card {
+    background-color: var(--xero-card-bg);
+    border: 1px solid var(--xero-border);
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    transition: all 0.2s ease;
+}
+
+.card:hover {
+    background-color: var(--xero-card-hover);
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--xero-border);
+    color: var(--xero-text);
+}
+
+.card-title, .card-subtitle {
+    color: var(--xero-text);
+}
+
+.form-label {
+    color: var(--xero-text);
+}
+
+.form-control, .form-select {
+    background-color: var(--xero-dark-bg);
+    border: 1px solid var(--xero-border);
+    color: var(--xero-text);
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: var(--xero-card-bg);
+    border-color: var(--xero-blue);
+    color: var(--xero-text);
+    box-shadow: 0 0 0 3px rgba(19, 181, 234, 0.1);
+}
+
+.btn-primary {
+    background-color: var(--xero-blue);
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: var(--xero-blue-hover);
+}
+
+.btn-outline-primary {
+    border: 1px solid var(--xero-blue);
+    color: var(--xero-blue);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--xero-blue);
+    color: #fff;
+}
+
+.table {
+    color: var(--xero-text);
+}
+
+.table thead th {
+    background-color: var(--xero-dark-bg);
+    border-bottom: 2px solid var(--xero-border);
+    color: var(--xero-text-muted);
+}
+
+.table tbody tr {
+    border-bottom: 1px solid var(--xero-border);
+}
+
+.table tbody tr:hover {
+    background-color: var(--xero-card-hover);
+}
+
+.nav-tabs {
+    border-bottom: 2px solid var(--xero-border);
+}
+
+.nav-tabs .nav-link {
+    color: var(--xero-text-muted);
+    border: none;
+    border-bottom: 2px solid transparent;
+}
+
+.nav-tabs .nav-link:hover {
+    color: var(--xero-blue);
+    border-bottom-color: var(--xero-blue);
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--xero-blue);
+    background-color: transparent;
+    border-bottom-color: var(--xero-blue);
+}
+
+.tag-badge {
+    display: inline-block;
+    padding: 0.25rem 0.625rem;
+    margin: 0.125rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+}
+
+.tag-essential {
+    background-color: rgba(63, 185, 80, 0.15);
+    color: var(--essential);
+    border: 1px solid var(--essential);
+}
+
+.tag-optional {
+    background-color: rgba(163, 113, 247, 0.15);
+    color: var(--optional);
+    border: 1px solid var(--optional);
+}
+
+.alert-info {
+    background-color: rgba(19, 181, 234, 0.1);
+    border-color: var(--xero-blue);
+    color: var(--xero-blue);
+}
+
+.alert-success {
+    background-color: rgba(63, 185, 80, 0.1);
+    border-color: var(--essential);
+    color: var(--essential);
+}
+
+.text-muted {
+    color: var(--xero-text-muted) !important;
+}
+
+/* Fix Bootstrap table white background */
+.table > :not(caption) > * > * {
+    background-color: transparent !important;
+    color: var(--xero-text);
+}
+
+.table-responsive {
+    background-color: transparent;
+}
+
+.table tbody td {
+    background-color: transparent !important;
+    border-color: var(--xero-border) !important;
+}
+
+/* Card body background */
+.card-body {
+    background-color: transparent;
+}
+
+/* Colorful Month Pills */
+.nav-pills.month-pills {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.nav-pills.month-pills .nav-link {
+    border-radius: 20px;
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--xero-text);
+    background-color: var(--xero-card-bg);
+    border: 1px solid var(--xero-border);
+    transition: all 0.2s ease;
+}
+
+.nav-pills.month-pills .nav-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.nav-pills.month-pills .nav-link.active {
+    color: #fff;
+    border-color: transparent;
+}
+
+/* Month pill colors - rotating through a palette */
+.nav-pills.month-pills .nav-link:nth-child(12n+1).active { background-color: #ef4444; } /* Red - Jan */
+.nav-pills.month-pills .nav-link:nth-child(12n+2).active { background-color: #f97316; } /* Orange - Feb */
+.nav-pills.month-pills .nav-link:nth-child(12n+3).active { background-color: #eab308; } /* Yellow - Mar */
+.nav-pills.month-pills .nav-link:nth-child(12n+4).active { background-color: #22c55e; } /* Green - Apr */
+.nav-pills.month-pills .nav-link:nth-child(12n+5).active { background-color: #14b8a6; } /* Teal - May */
+.nav-pills.month-pills .nav-link:nth-child(12n+6).active { background-color: #06b6d4; } /* Cyan - Jun */
+.nav-pills.month-pills .nav-link:nth-child(12n+7).active { background-color: #3b82f6; } /* Blue - Jul */
+.nav-pills.month-pills .nav-link:nth-child(12n+8).active { background-color: #6366f1; } /* Indigo - Aug */
+.nav-pills.month-pills .nav-link:nth-child(12n+9).active { background-color: #8b5cf6; } /* Violet - Sep */
+.nav-pills.month-pills .nav-link:nth-child(12n+10).active { background-color: #a855f7; } /* Purple - Oct */
+.nav-pills.month-pills .nav-link:nth-child(12n+11).active { background-color: #ec4899; } /* Pink - Nov */
+.nav-pills.month-pills .nav-link:nth-child(12n+0).active { background-color: #f43f5e; } /* Rose - Dec */
+
+/* Inactive pill hover colors */
+.nav-pills.month-pills .nav-link:nth-child(12n+1):not(.active):hover { border-color: #ef4444; color: #ef4444; }
+.nav-pills.month-pills .nav-link:nth-child(12n+2):not(.active):hover { border-color: #f97316; color: #f97316; }
+.nav-pills.month-pills .nav-link:nth-child(12n+3):not(.active):hover { border-color: #eab308; color: #eab308; }
+.nav-pills.month-pills .nav-link:nth-child(12n+4):not(.active):hover { border-color: #22c55e; color: #22c55e; }
+.nav-pills.month-pills .nav-link:nth-child(12n+5):not(.active):hover { border-color: #14b8a6; color: #14b8a6; }
+.nav-pills.month-pills .nav-link:nth-child(12n+6):not(.active):hover { border-color: #06b6d4; color: #06b6d4; }
+.nav-pills.month-pills .nav-link:nth-child(12n+7):not(.active):hover { border-color: #3b82f6; color: #3b82f6; }
+.nav-pills.month-pills .nav-link:nth-child(12n+8):not(.active):hover { border-color: #6366f1; color: #6366f1; }
+.nav-pills.month-pills .nav-link:nth-child(12n+9):not(.active):hover { border-color: #8b5cf6; color: #8b5cf6; }
+.nav-pills.month-pills .nav-link:nth-child(12n+10):not(.active):hover { border-color: #a855f7; color: #a855f7; }
+.nav-pills.month-pills .nav-link:nth-child(12n+11):not(.active):hover { border-color: #ec4899; color: #ec4899; }
+.nav-pills.month-pills .nav-link:nth-child(12n+0):not(.active):hover { border-color: #f43f5e; color: #f43f5e; }
+
+/* Period selector wrap */
+.period-selector.flex-wrap {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+/* Expandable Category Breakdown */
+.category-breakdown-item {
+    border-bottom: 1px solid var(--xero-border);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    background-color: transparent;
+}
+
+.category-breakdown-item:last-child {
+    border-bottom: none;
+}
+
+.category-breakdown-item:hover {
+    background-color: var(--xero-card-hover);
+}
+
+.category-breakdown-header {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.category-breakdown-header .category-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.category-breakdown-header .category-info strong {
+    color: var(--xero-text);
+}
+
+.category-breakdown-header .category-info small {
+    color: var(--xero-text-muted);
+}
+
+.category-color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.category-breakdown-header .category-stats {
+    text-align: right;
+}
+
+.category-breakdown-header .category-stats small {
+    color: var(--xero-text-muted);
+}
+
+.category-breakdown-header .expand-icon {
+    transition: transform 0.2s ease;
+    color: var(--xero-text-muted);
+}
+
+.category-breakdown-item.expanded .expand-icon {
+    transform: rotate(180deg);
+}
+
+.category-transactions {
+    display: none;
+    background-color: var(--xero-dark-bg);
+    padding: 0.5rem 1rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.category-breakdown-item.expanded .category-transactions {
+    display: block;
+}
+
+.category-transaction-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--xero-border);
+    font-size: 0.875rem;
+    color: var(--xero-text);
+}
+
+.category-transaction-row:last-child {
+    border-bottom: none;
+}
+
+.category-transaction-row .btn {
+    opacity: 0.5;
+    transition: opacity 0.15s ease;
+}
+
+.category-transaction-row:hover .btn {
+    opacity: 1;
+}
+
+.category-transaction-row .text-muted {
+    color: var(--xero-text-muted) !important;
+}
+
+/* Modal Dark Theme */
+.modal-content {
+    background-color: var(--xero-card-bg);
+    border: 1px solid var(--xero-border);
+    color: var(--xero-text);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--xero-border);
+    color: var(--xero-text);
+}
+
+.modal-header .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.modal-title {
+    color: var(--xero-text);
+}
+
+.modal-body {
+    color: var(--xero-text);
+}
+
+.modal-body p {
+    color: var(--xero-text);
+}
+
+.modal-body label {
+    color: var(--xero-text);
+}
+
+.modal-body .form-label {
+    color: var(--xero-text);
+}
+
+.modal-body .form-check-label {
+    color: var(--xero-text);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--xero-border);
+}
+
+/* Form controls in modals */
+.modal .form-control,
+.modal .form-select {
+    background-color: var(--xero-dark-bg);
+    border: 1px solid var(--xero-border);
+    color: var(--xero-text);
+}
+
+.modal .form-control:focus,
+.modal .form-select:focus {
+    background-color: var(--xero-card-bg);
+    border-color: var(--xero-blue);
+    color: var(--xero-text);
+    box-shadow: 0 0 0 3px rgba(19, 181, 234, 0.1);
+}
+
+.modal .form-control::placeholder {
+    color: var(--xero-text-muted);
+}
+
+/* Radio buttons and checkboxes in modals */
+.modal .form-check-input {
+    background-color: var(--xero-dark-bg);
+    border-color: var(--xero-border);
+}
+
+.modal .form-check-input:checked {
+    background-color: var(--xero-blue);
+    border-color: var(--xero-blue);
+}
+
+.modal .form-check-input:focus {
+    box-shadow: 0 0 0 3px rgba(19, 181, 234, 0.25);
+}
+
+/* List group in modals (for duplicates) */
+.modal .list-group-item {
+    background-color: var(--xero-card-bg);
+    border-color: var(--xero-border);
+    color: var(--xero-text);
+}
+
+.modal .list-group-item:hover {
+    background-color: var(--xero-card-hover);
+}
+
+/* Alert styling in modals */
+.modal .alert-warning {
+    background-color: rgba(245, 158, 11, 0.1);
+    border-color: #f59e0b;
+    color: #f59e0b;
+}
+
+.modal .alert-danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+/* Sortable Table Headers */
+th[onclick] {
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s ease;
+}
+
+th[onclick]:hover {
+    color: var(--xero-blue) !important;
+}
+
+th[onclick] .sort-icon {
+    margin-left: 0.25rem;
+}
+
+/* Demo Banner */
+.demo-banner {
+    background: linear-gradient(135deg, rgba(19, 181, 234, 0.15), rgba(19, 181, 234, 0.05));
+    border-bottom: 1px solid var(--xero-blue);
+    color: var(--xero-blue);
+    text-align: center;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
