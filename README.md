@@ -8,7 +8,8 @@ A demo version of the Balance Sheet personal finance tracker. This site shows th
 - **Transaction management** with monthly tabs, search, filters, and sortable columns
 - **Reports** with interactive Chart.js charts (category pie chart, monthly trend line chart)
 - **Category breakdown** with expandable transaction details
-- **Cash position tracking** with runway calculations
+- **Cash position tracking** with runway calculations, switchable monthly burn (average / median / single month over 3, 6, 12 months or all time) and an inline account calculator for totalling balances
+- **Multi-month selection** on the Transactions tab to view several months combined
 - **CSV import** support for ANZ, CBA, NAB, and Amex statement formats
 - **PDF export** with customizable report sections
 - **Smart categorization** with 18+ expense categories and learned rules

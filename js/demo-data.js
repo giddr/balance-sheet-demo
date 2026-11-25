@@ -231,6 +231,14 @@ const DEMO_RUNWAY = {
     message: 'success'
 };
 
+// Per-month net burn (expenses minus income). Last 3 months average to monthly_burn above.
+DEMO_RUNWAY.monthly_burns = {
+    '2025-01': 3850.00, '2025-02': 4120.50, '2025-03': 4890.25, '2025-04': 3975.00,
+    '2025-05': 4210.75, '2025-06': 4560.00, '2025-07': 3790.40, '2025-08': 4325.00,
+    '2025-09': 4480.60, '2025-10': 4100.00, '2025-11': 4650.00, '2025-12': 4375.00,
+    '2026-01': 4100.00
+};
+
 // ============ LEARNED RULES ============
 const DEMO_RULES = [
     { id: 1, description_pattern: 'woolworths', bpay_biller_code: null, category_id: 1, category_name: 'Food & Dining', is_essential: true, transaction_type: 'expense', match_type: 'contains', priority: 10, created_at: '2025-01-10T10:00:00' },

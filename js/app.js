@@ -11,8 +11,9 @@ let statsYear = 2025; // Year shown in statistics cards - default to 2025 where 
 // Sorting state: { column, direction } per table context
 let sortState = {}; // keyed by month or table name, e.g. { '2025-01': { column: 'date', direction: 'asc' } }
 
-// Track currently active month tab so it persists across reloads
-let activeMonthTab = null;
+// Track currently selected month tabs (supports multi-select)
+let activeMonthTab = null; // kept for backward compat
+let selectedMonths = new Set();
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -169,6 +170,9 @@ function setupEventListeners() {
     if (cashForm) {
         cashForm.addEventListener('submit', handleCashPositionSubmit);
     }
+
+    // Cash calculator
+    setupCashCalculator();
 
     // Recurring checkbox toggle
     const recurringCheckbox = document.getElementById('is-recurring');
@@ -367,67 +371,110 @@ function displayExpensesByMonth(expenses) {
         return;
     }
 
-    // Determine which month tab to activate (restore previous or default to first)
-    const targetMonth = (activeMonthTab && months.includes(activeMonthTab)) ? activeMonthTab : months[0];
-    activeMonthTab = targetMonth;
+    // Clean up selectedMonths to only include months that exist
+    selectedMonths = new Set([...selectedMonths].filter(m => months.includes(m)));
 
-    // Create tabs
+    // If nothing selected, default to first month
+    if (selectedMonths.size === 0) {
+        if (activeMonthTab && months.includes(activeMonthTab)) {
+            selectedMonths.add(activeMonthTab);
+        } else {
+            selectedMonths.add(months[0]);
+        }
+    }
+    activeMonthTab = [...selectedMonths][0];
+
+    // Store grouped expenses for sorting re-renders
+    window._expensesByMonth = expensesByMonth;
+
+    // Create tabs (multi-select toggle buttons)
     monthlyTabs.innerHTML = months.map((month) => {
         const date = new Date(month + '-01');
         const label = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
         return `
             <li class="nav-item">
-                <button class="nav-link ${month === targetMonth ? 'active' : ''}"
-                        data-bs-toggle="pill"
-                        data-bs-target="#month-${month}"
+                <button class="nav-link ${selectedMonths.has(month) ? 'active' : ''}"
                         type="button"
-                        onclick="activeMonthTab='${month}'">
+                        onclick="toggleMonth('${month}')">
                     ${label}
                 </button>
             </li>
         `;
     }).join('');
 
-    // Store grouped expenses for sorting re-renders
-    window._expensesByMonth = expensesByMonth;
+    // Render combined content for selected months
+    renderSelectedMonthsContent();
+}
 
-    // Create content
-    monthlyContent.innerHTML = months.map((month, index) => {
-        const monthExpenses = expensesByMonth[month];
-        const monthTotal = monthExpenses.filter(e => e.transaction_type === 'expense').reduce((sum, e) => sum + e.amount, 0);
-        const monthIncome = monthExpenses.filter(e => e.transaction_type === 'income').reduce((sum, e) => sum + e.amount, 0);
+function toggleMonth(month) {
+    if (selectedMonths.has(month)) {
+        // Don't allow deselecting the last month
+        if (selectedMonths.size > 1) {
+            selectedMonths.delete(month);
+        }
+    } else {
+        selectedMonths.add(month);
+    }
+    activeMonthTab = [...selectedMonths][0];
 
-        return `
-            <div class="tab-pane fade ${month === targetMonth ? 'show active' : ''}" id="month-${month}">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <span class="badge bg-success me-2">Income: $${monthIncome.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-                        <span class="badge bg-danger">Expenses: $${monthTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
-                    </div>
-                    <span class="text-muted">${monthExpenses.length} transactions</span>
+    // Update button active states
+    document.querySelectorAll('#monthly-tabs .nav-link').forEach(btn => {
+        const match = btn.getAttribute('onclick').match(/'([^']+)'/);
+        if (match) btn.classList.toggle('active', selectedMonths.has(match[1]));
+    });
+
+    // Re-render the content area
+    renderSelectedMonthsContent();
+}
+
+function renderSelectedMonthsContent() {
+    const monthlyContent = document.getElementById('monthly-tab-content');
+    if (!monthlyContent || !window._expensesByMonth) return;
+
+    // Combine expenses from all selected months
+    let combinedExpenses = [];
+    selectedMonths.forEach(month => {
+        if (window._expensesByMonth[month]) {
+            combinedExpenses = combinedExpenses.concat(window._expensesByMonth[month]);
+        }
+    });
+
+    const totalExpenses = combinedExpenses.filter(e => e.transaction_type === 'expense').reduce((sum, e) => sum + e.amount, 0);
+    const totalIncome = combinedExpenses.filter(e => e.transaction_type === 'income').reduce((sum, e) => sum + e.amount, 0);
+
+    const tableKey = 'month-combined';
+    window._combinedExpenses = combinedExpenses;
+
+    monthlyContent.innerHTML = `
+        <div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <span class="badge bg-success me-2">Income: $${totalIncome.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                    <span class="badge bg-danger">Expenses: $${totalExpenses.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th style="width: 30px;"></th>
-                                ${renderSortableHeader('month-' + month, 'date', 'Date')}
-                                ${renderSortableHeader('month-' + month, 'description', 'Description')}
-                                ${renderSortableHeader('month-' + month, 'account', 'Account')}
-                                ${renderSortableHeader('month-' + month, 'category', 'Category')}
-                                ${renderSortableHeader('month-' + month, 'type', 'Type')}
-                                ${renderSortableHeader('month-' + month, 'amount', 'Amount', 'text-end')}
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="month-tbody-${month}">
-                            ${sortExpenses(monthExpenses, 'month-' + month).map(expense => createExpenseRow(expense)).join('')}
-                        </tbody>
-                    </table>
-                </div>
+                <span class="text-muted">${combinedExpenses.length} transactions</span>
             </div>
-        `;
-    }).join('');
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width: 30px;"></th>
+                            ${renderSortableHeader(tableKey, 'date', 'Date')}
+                            ${renderSortableHeader(tableKey, 'description', 'Description')}
+                            ${renderSortableHeader(tableKey, 'account', 'Account')}
+                            ${renderSortableHeader(tableKey, 'category', 'Category')}
+                            ${renderSortableHeader(tableKey, 'type', 'Type')}
+                            ${renderSortableHeader(tableKey, 'amount', 'Amount', 'text-end')}
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="month-tbody-combined">
+                        ${sortExpenses(combinedExpenses, tableKey).map(expense => createExpenseRow(expense)).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
 }
 
 function renderSortableHeader(tableKey, column, label, extraClass) {
@@ -436,18 +483,23 @@ function renderSortableHeader(tableKey, column, label, extraClass) {
 }
 
 function rerenderMonthTable(tableKey) {
-    const month = tableKey.replace('month-', '');
-    const expenses = window._expensesByMonth && window._expensesByMonth[month];
+    let expenses;
+    if (tableKey === 'month-combined') {
+        expenses = window._combinedExpenses;
+    } else {
+        const month = tableKey.replace('month-', '');
+        expenses = window._expensesByMonth && window._expensesByMonth[month];
+    }
     if (!expenses) return;
 
-    // Re-render the tbody
-    const tbody = document.getElementById('month-tbody-' + month);
+    const tbodyId = tableKey === 'month-combined' ? 'month-tbody-combined' : 'month-tbody-' + tableKey.replace('month-', '');
+    const tbody = document.getElementById(tbodyId);
     if (tbody) {
         tbody.innerHTML = sortExpenses(expenses, tableKey).map(expense => createExpenseRow(expense)).join('');
     }
 
     // Re-render the thead to update sort icons
-    const table = tbody.closest('table');
+    const table = tbody && tbody.closest('table');
     if (table) {
         const thead = table.querySelector('thead tr');
         if (thead) {
@@ -1135,10 +1187,15 @@ async function toggleCategoryBreakdown(element, categoryName) {
 }
 
 // ============ CASH POSITION & RUNWAY ============
+let burnData = null;
+let burnMode = 'avg';
+let burnPeriod = 3; // number of months, 0 = all
+
 async function loadCashRunway() {
     try {
         const response = await fetch('/api/cash-position/runway');
         const data = await response.json();
+        burnData = data;
 
         const currentCash = document.getElementById('current-cash');
         if (currentCash) {
@@ -1166,14 +1223,99 @@ async function loadCashRunway() {
             runwayDate.textContent = data.runway_date ? `until ${formatDate(data.runway_date)}` : '--';
         }
 
-        const monthlyBurn = document.getElementById('monthly-burn');
-        if (monthlyBurn) {
-            monthlyBurn.textContent = `$${data.monthly_burn.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        // Populate month selector for burn rate
+        const burnMonthSelect = document.getElementById('burn-month-select');
+        if (burnMonthSelect && data.monthly_burns) {
+            const months = Object.keys(data.monthly_burns).sort().reverse();
+            burnMonthSelect.innerHTML = months.map(m => {
+                const d = new Date(m + '-01');
+                const label = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                return `<option value="${m}">${label}</option>`;
+            }).join('');
         }
+
+        // Display burn based on current mode
+        updateBurnDisplay();
 
     } catch (error) {
         console.error('Error loading cash runway:', error);
     }
+}
+
+function toggleBurnMode(mode) {
+    burnMode = mode;
+
+    // Update button states
+    document.querySelectorAll('#burn-avg, #burn-median, #burn-month').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('burn-' + mode).classList.add('active');
+
+    // Show/hide month selector vs period selector
+    const monthSelector = document.getElementById('burn-month-selector');
+    const periodSelector = document.getElementById('burn-period-selector');
+    if (monthSelector) monthSelector.style.display = mode === 'month' ? 'block' : 'none';
+    if (periodSelector) periodSelector.style.display = mode === 'month' ? 'none' : 'block';
+
+    updateBurnDisplay();
+}
+
+function toggleBurnPeriod(months) {
+    burnPeriod = months;
+
+    document.querySelectorAll('#burn-period-3, #burn-period-6, #burn-period-12, #burn-period-0').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('burn-period-' + months).classList.add('active');
+
+    updateBurnDisplay();
+}
+
+function selectBurnMonth() {
+    updateBurnDisplay();
+}
+
+function getBurnValuesForPeriod() {
+    if (!burnData || !burnData.monthly_burns) return [];
+    const allMonths = Object.keys(burnData.monthly_burns).sort();
+    const slice = burnPeriod > 0 ? allMonths.slice(-burnPeriod) : allMonths;
+    return slice.map(m => burnData.monthly_burns[m]);
+}
+
+function updateBurnDisplay() {
+    if (!burnData) return;
+
+    const monthlyBurn = document.getElementById('monthly-burn');
+    const burnLabel = document.getElementById('burn-label');
+    if (!monthlyBurn) return;
+
+    let value = 0;
+    let label = '';
+    const periodLabel = burnPeriod > 0 ? `last ${burnPeriod}m` : 'all time';
+
+    if (burnMode === 'avg') {
+        const values = getBurnValuesForPeriod();
+        value = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+        label = `Avg ${periodLabel}`;
+    } else if (burnMode === 'median') {
+        const values = getBurnValuesForPeriod().sort((a, b) => a - b);
+        if (values.length === 0) {
+            value = 0;
+        } else if (values.length % 2 === 0) {
+            value = (values[values.length / 2 - 1] + values[values.length / 2]) / 2;
+        } else {
+            value = values[Math.floor(values.length / 2)];
+        }
+        label = `Median ${periodLabel}`;
+    } else if (burnMode === 'month') {
+        const selectedMonth = document.getElementById('burn-month-select')?.value;
+        if (selectedMonth && burnData.monthly_burns && burnData.monthly_burns[selectedMonth] !== undefined) {
+            value = burnData.monthly_burns[selectedMonth];
+            const d = new Date(selectedMonth + '-01');
+            label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        }
+    }
+
+    const isNegative = value < 0;
+    monthlyBurn.textContent = `${isNegative ? '-' : ''}$${Math.abs(value).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+    monthlyBurn.style.color = value > 0 ? '#ef4444' : '#10b981';
+    if (burnLabel) burnLabel.textContent = label;
 }
 
 function showAddCashPositionModal() {
@@ -1209,6 +1351,121 @@ async function handleCashPositionSubmit(e) {
         console.error('Error saving cash position:', error);
         showToast('Error saving cash position', 'danger');
     }
+}
+
+function setupCashCalculator() {
+    const toggleBtn = document.getElementById('toggle-cash-calculator');
+    const calculator = document.getElementById('cash-calculator');
+    const addRowBtn = document.getElementById('add-calc-row');
+    const applyBtn = document.getElementById('apply-calc-total');
+
+    if (!toggleBtn || !calculator) return;
+
+    toggleBtn.addEventListener('click', () => {
+        const isHidden = calculator.style.display === 'none';
+        calculator.style.display = isHidden ? 'block' : 'none';
+    });
+
+    addRowBtn.addEventListener('click', () => addCalcRow());
+
+    applyBtn.addEventListener('click', () => {
+        const total = computeCalcTotal();
+        document.getElementById('cash-amount-input').value = total.toFixed(2);
+    });
+
+    // Delegate events for calc rows (input changes and remove buttons)
+    const calcRows = document.getElementById('calc-rows');
+    calcRows.addEventListener('input', (e) => {
+        if (e.target.classList.contains('calc-value')) {
+            updateCalcTotal();
+        }
+    });
+    calcRows.addEventListener('click', (e) => {
+        const removeBtn = e.target.closest('.calc-remove-row');
+        if (removeBtn) {
+            const row = removeBtn.closest('.calc-row');
+            const allRows = calcRows.querySelectorAll('.calc-row');
+            if (allRows.length > 1) {
+                row.remove();
+                updateRemoveButtonVisibility();
+                updateCalcTotal();
+            }
+        }
+    });
+
+    // Reset calculator when modal is hidden
+    const modal = document.getElementById('addCashPositionModal');
+    if (modal) {
+        modal.addEventListener('hidden.bs.modal', () => {
+            resetCashCalculator();
+        });
+    }
+}
+
+function addCalcRow() {
+    const calcRows = document.getElementById('calc-rows');
+    const row = document.createElement('div');
+    row.className = 'calc-row d-flex gap-2 mb-2 align-items-center';
+    row.innerHTML = `
+        <input type="text" class="form-control form-control-sm calc-label" placeholder="Account name" style="flex: 1;">
+        <input type="number" class="form-control form-control-sm calc-value" placeholder="0.00" step="0.01" style="flex: 1;">
+        <button type="button" class="btn btn-sm btn-outline-danger calc-remove-row" title="Remove">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    `;
+    calcRows.appendChild(row);
+    updateRemoveButtonVisibility();
+    row.querySelector('.calc-label').focus();
+}
+
+function computeCalcTotal() {
+    let total = 0;
+    document.querySelectorAll('#calc-rows .calc-value').forEach(input => {
+        const val = parseFloat(input.value);
+        if (!isNaN(val)) total += val;
+    });
+    return total;
+}
+
+function updateCalcTotal() {
+    const total = computeCalcTotal();
+    document.getElementById('calc-total').textContent = total.toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function updateRemoveButtonVisibility() {
+    const rows = document.querySelectorAll('#calc-rows .calc-row');
+    rows.forEach((row, i) => {
+        const btn = row.querySelector('.calc-remove-row');
+        if (btn) btn.style.visibility = rows.length <= 1 ? 'hidden' : 'visible';
+    });
+}
+
+function resetCashCalculator() {
+    const calculator = document.getElementById('cash-calculator');
+    if (calculator) calculator.style.display = 'none';
+
+    const calcRows = document.getElementById('calc-rows');
+    if (calcRows) {
+        calcRows.innerHTML = `
+            <div class="calc-row d-flex gap-2 mb-2 align-items-center">
+                <input type="text" class="form-control form-control-sm calc-label" placeholder="Account name" style="flex: 1;">
+                <input type="number" class="form-control form-control-sm calc-value" placeholder="0.00" step="0.01" style="flex: 1;">
+                <button type="button" class="btn btn-sm btn-outline-danger calc-remove-row" title="Remove" style="visibility: hidden;">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="calc-row d-flex gap-2 mb-2 align-items-center">
+                <input type="text" class="form-control form-control-sm calc-label" placeholder="Account name" style="flex: 1;">
+                <input type="number" class="form-control form-control-sm calc-value" placeholder="0.00" step="0.01" style="flex: 1;">
+                <button type="button" class="btn btn-sm btn-outline-danger calc-remove-row" title="Remove">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        `;
+    }
+
+    const totalEl = document.getElementById('calc-total');
+    if (totalEl) totalEl.textContent = '0.00';
 }
 
 async function showCashHistoryModal() {
